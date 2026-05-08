@@ -1,0 +1,20 @@
+{
+  "name": "sev7-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:client": "npm run dev -w @sev7/client",
+    "dev:pro": "npm run dev -w @sev7/pro",
+    "dev": "concurrently -n CLIENT,PRO -c blue,magenta \"npm:dev:client\" \"npm:dev:pro\"",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
