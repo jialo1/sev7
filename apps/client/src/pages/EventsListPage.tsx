@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatDateTimeFr, formatXof } from '@sev7/shared'
 import { CoverImage } from '@sev7/shared'
+import { useRealtimeRefresh } from '../hooks/useRealtimeRefresh'
 
 type EventRow = {
   id: string
@@ -18,24 +19,23 @@ export function EventsListPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    let active = true
-    supabase
+  const fetchEvents = useCallback(async () => {
+    const { data, error } = await supabase
       .from('events')
       .select('id, title, room_label, starts_at, poster_url, venues(name, city)')
       .eq('status', 'published')
       .gte('starts_at', new Date().toISOString())
       .order('starts_at', { ascending: true })
-      .then(({ data, error }) => {
-        if (!active) return
-        if (error) setError(error.message)
-        else setEvents((data ?? []) as unknown as EventRow[])
-        setLoading(false)
-      })
-    return () => {
-      active = false
-    }
+    if (error) setError(error.message)
+    else setEvents((data ?? []) as unknown as EventRow[])
+    setLoading(false)
   }, [])
+
+  useEffect(() => {
+    void Promise.resolve().then(fetchEvents)
+  }, [fetchEvents])
+
+  useRealtimeRefresh(['events'], fetchEvents)
 
   return (
     <main className="events-page">

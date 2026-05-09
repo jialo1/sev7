@@ -3,8 +3,6 @@ import { useState } from 'react'
 import { AdminSidebar } from '../components/admin/Sidebar'
 import { signOut, useAuth } from '@sev7/shared'
 
-const CLIENT_URL = import.meta.env.VITE_CLIENT_URL ?? 'http://localhost:5173'
-
 export function AdminLayout() {
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
@@ -35,9 +33,7 @@ export function AdminLayout() {
 
       <div className="admin-main">
         <header className="admin-topbar">
-          <a href={CLIENT_URL} className="top-action-link" target="_blank" rel="noopener noreferrer">
-            ↗ Voir l'app client
-          </a>
+          <span className="admin-topbar-brand">SEV7 PRO</span>
           <span className="admin-topbar-user">
             {user?.email}
             <button

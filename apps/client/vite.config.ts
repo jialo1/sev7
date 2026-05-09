@@ -9,6 +9,9 @@ export default defineConfig({
     tsconfigPaths(),
     VitePWA({
       registerType: 'autoUpdate',
+      // En dev, on désactive le SW pour éviter les caches stale qui masquent
+      // les changements HMR. Il reste actif en build prod.
+      devOptions: { enabled: false },
       includeAssets: ['favicon.svg', 'icons.svg'],
       manifest: {
         name: 'SEV7 — Réservations',

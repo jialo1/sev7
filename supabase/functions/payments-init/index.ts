@@ -38,11 +38,25 @@ Deno.serve(async (req) => {
 
   const apiKey = Deno.env.get('CINETPAY_API_KEY')
   const siteId = Deno.env.get('CINETPAY_SITE_ID')
+  const publicAppUrl = Deno.env.get('PUBLIC_APP_URL') ?? 'http://localhost:5173'
   const notifyUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/payments-webhook`
-  const returnUrl = `${Deno.env.get('PUBLIC_APP_URL')}/tickets/${booking.id}`
+  const returnUrl = `${publicAppUrl}/tickets/${booking.id}`
 
+  // Mode mock pour dev : si CinetPay pas configuré, on simule un paiement
+  // réussi (booking → paid) et on renvoie une URL qui ramène à /tickets/:id.
   if (!apiKey || !siteId) {
-    return json({ error: 'cinetpay_not_configured' }, { status: 500 })
+    await sb
+      .from('bookings')
+      .update({ payment_method: method, status: 'paid' })
+      .eq('id', booking.id)
+    await sb.from('payment_intents').insert({
+      booking_id: booking.id,
+      provider: 'mock',
+      amount_xof: booking.total_xof,
+      status: 'accepted',
+      raw: { mock: true, reason: 'cinetpay_not_configured_dev_only' },
+    })
+    return json({ payment_url: returnUrl, mock: true })
   }
 
   const payload = {

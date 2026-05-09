@@ -7,6 +7,23 @@ type Hold = {
   expiresAt: string
 }
 
+function humanError(code: string): string {
+  switch (code) {
+    case 'table_already_held':
+      return 'Cette table vient d\'être prise par quelqu\'un d\'autre. Choisis-en une autre.'
+    case 'event_not_open':
+      return 'Cette soirée n\'est pas (ou plus) ouverte à la réservation.'
+    case 'table_mismatch':
+      return 'Erreur : cette table n\'appartient pas à cette soirée.'
+    case 'unauthorized':
+      return 'Tu dois être connecté pour réserver une table.'
+    case 'missing_event_or_table':
+      return 'Données de réservation incomplètes.'
+    default:
+      return code || 'Erreur lors de la réservation. Réessaie.'
+  }
+}
+
 export function useBookingHold(eventId: string | undefined) {
   const [hold, setHold] = useState<Hold | null>(null)
   const [busy, setBusy] = useState(false)
@@ -29,18 +46,40 @@ export function useBookingHold(eventId: string | undefined) {
             body: { booking_id: holdRef.current.bookingId },
           })
         }
-        const { data, error: fnErr } = await supabase.functions.invoke<{
+        const res = await supabase.functions.invoke<{
           booking_id: string
           table_id: string
           hold_expires_at: string
+          error?: string
         }>('create-hold', {
           body: { event_id: eventId, table_id: tableId },
         })
-        if (fnErr) {
-          setError(fnErr.message)
+
+        // Cas erreur HTTP (409, 400, 500…) : le client SDK met `error` mais
+        // perd le body. On essaie de récupérer le payload via context.response
+        if (res.error) {
+          let reason = res.error.message
+          // FunctionsHttpError expose response sur certaines versions
+          const response = (res.error as { context?: { response?: Response } })
+            .context?.response
+          if (response) {
+            try {
+              const payload = await response.json()
+              reason = payload?.error ?? reason
+            } catch {
+              /* ignore */
+            }
+          }
+          setError(humanError(reason))
           return null
         }
-        if (!data) return null
+
+        const data = res.data
+        if (!data || data.error) {
+          setError(humanError(data?.error ?? 'unknown_error'))
+          return null
+        }
+
         const next = {
           bookingId: data.booking_id,
           tableId: data.table_id,

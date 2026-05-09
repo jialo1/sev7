@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatDateTimeFr, formatXof } from '@sev7/shared'
+import { formatDateTimeFr, formatXof, useAuth } from '@sev7/shared'
 import { CoverImage } from '@sev7/shared'
 
 type EventRow = {
@@ -20,10 +20,15 @@ const TABS = ['À propos', 'Galerie', 'Organisateur', 'Avis', 'Plus']
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  const { user } = useAuth()
   const [event, setEvent] = useState<EventRow | null>(null)
   const [tables, setTables] = useState<TableRow[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState(0)
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [favBusy, setFavBusy] = useState(false)
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -55,10 +60,74 @@ export function EventDetailPage() {
     }
   }, [id])
 
+  // Charge l'état favori (si user connecté)
+  useEffect(() => {
+    if (!user?.id || !id) return
+    let active = true
+    supabase
+      .from('favorites')
+      .select('event_id')
+      .eq('user_id', user.id)
+      .eq('event_id', id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setIsFavorite(!!data)
+      })
+    return () => {
+      active = false
+    }
+  }, [user?.id, id])
+
   const minPrice = useMemo(
     () => (tables.length ? Math.min(...tables.map((t) => t.price_xof)) : 0),
     [tables],
   )
+
+  async function toggleFavorite() {
+    if (!user) {
+      navigate('/auth/login', { state: { from: location.pathname } })
+      return
+    }
+    if (!id) return
+    setFavBusy(true)
+    if (isFavorite) {
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('event_id', id)
+      setIsFavorite(false)
+    } else {
+      await supabase
+        .from('favorites')
+        .insert({ user_id: user.id, event_id: id })
+      setIsFavorite(true)
+    }
+    setFavBusy(false)
+  }
+
+  async function share() {
+    if (!event) return
+    const url = window.location.href
+    const title = `${event.title} — SEV7`
+    const text = `Viens à ${event.title} le ${formatDateTimeFr(event.starts_at)}`
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title, text, url })
+        return
+      } catch {
+        // user cancelled or not supported in context
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareFeedback('Lien copié dans le presse-papier')
+      setTimeout(() => setShareFeedback(null), 2200)
+    } catch {
+      setShareFeedback('Impossible de copier le lien')
+      setTimeout(() => setShareFeedback(null), 2200)
+    }
+  }
 
   if (loading) return <p className="page-loading">Chargement…</p>
   if (!event) return <p className="empty">Soirée introuvable.</p>
@@ -79,12 +148,31 @@ export function EventDetailPage() {
             </svg>
           </button>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button type="button" className="icon-btn" aria-label="Sauvegarder">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <button
+              type="button"
+              className={`icon-btn${isFavorite ? ' icon-btn--active' : ''}`}
+              aria-label={isFavorite ? 'Retirer des favoris' : 'Enregistrer'}
+              aria-pressed={isFavorite}
+              disabled={favBusy}
+              onClick={toggleFavorite}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill={isFavorite ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z" strokeLinejoin="round" />
               </svg>
             </button>
-            <button type="button" className="icon-btn" aria-label="Partager">
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Partager"
+              onClick={share}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v14" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -172,6 +260,8 @@ export function EventDetailPage() {
           Choisir ma table
         </Link>
       </div>
+
+      {shareFeedback && <div className="toast">{shareFeedback}</div>}
     </article>
   )
 }

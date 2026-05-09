@@ -16,7 +16,6 @@ import { CallbackPage } from './pages/auth/CallbackPage'
 import { AccountHomePage } from './pages/account/HomePage'
 import { AccountProfilePage } from './pages/account/ProfilePage'
 import { AccountHistoryPage } from './pages/account/HistoryPage'
-import { ProRedirectPage } from './pages/ProRedirectPage'
 import { RoleGuard } from '@sev7/shared'
 
 export const router = createBrowserRouter([
@@ -97,10 +96,6 @@ export const router = createBrowserRouter([
           </RoleGuard>
         ),
       },
-      // Anciennes routes pro → redirect vers app pro
-      { path: 'admin/*', element: <ProRedirectPage to="/admin" /> },
-      { path: 'staff/*', element: <ProRedirectPage to="/staff/dashboard" /> },
-      { path: 'scan', element: <ProRedirectPage to="/scan" /> },
     ],
   },
 ])

@@ -22,6 +22,15 @@ const links = [
     ),
   },
   {
+    to: '/menu',
+    label: 'Menu',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M9 3v8a3 3 0 11-3 0V3M9 3h0M16 3v18M16 14a4 4 0 004-4V3h-4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     to: '/tickets',
     label: 'Billets',
     icon: (

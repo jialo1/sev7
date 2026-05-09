@@ -71,8 +71,18 @@ export function SeatSelectionPage() {
     if (result) setSelectedId(result.tableId)
   }
 
-  function handleBack() {
-    navigate(`/events/${eventId}`)
+  async function handleBack() {
+    if (hold) await release()
+    setSelectedId(null)
+    // Vrai back browser : remonte d'une étape, sans pousser une nouvelle entrée
+    // dans l'historique. Évite la loop event ↔ seats.
+    if (window.history.length > 1) navigate(-1)
+    else navigate(`/events/${eventId}`, { replace: true })
+  }
+
+  async function handleCancel() {
+    if (hold) await release()
+    setSelectedId(null)
   }
 
   function handleContinue() {
@@ -90,6 +100,7 @@ export function SeatSelectionPage() {
         selected={selected}
         onBack={handleBack}
         onContinue={handleContinue}
+        onCancel={handleCancel}
       />
       <FloorPlan
         tables={tables}

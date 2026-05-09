@@ -26,13 +26,19 @@ type DbBooking = {
 
 const ACTIVE_STATUSES = new Set(['pending', 'reserved', 'paid', 'attended'])
 
+type ExtendedStatus = TableStatus | 'mine-pending' | 'mine-locked'
+
 function tableStatusFromBookings(
   bookings: DbBooking[],
   currentUserId: string | null,
-): TableStatus | 'mine' {
+): ExtendedStatus {
   const active = bookings.find((b) => ACTIVE_STATUSES.has(b.status))
   if (!active) return 'available'
-  if (currentUserId && active.user_id === currentUserId) return 'mine'
+  if (currentUserId && active.user_id === currentUserId) {
+    // Mon hold pending → je peux re-cliquer pour deselect.
+    // Mon billet payé/réservé → verrouillé, je ne peux pas en prendre une 2e
+    return active.status === 'pending' ? 'mine-pending' : 'mine-locked'
+  }
   if (active.status === 'pending') return 'pending'
   return 'booked'
 }
@@ -112,7 +118,11 @@ export function useTableAvailability(eventId: string | undefined, venueId: strin
       const tableBookings = bookings.filter((b) => b.table_id === t.id)
       const computed = tableStatusFromBookings(tableBookings, userId)
       const status: TableStatus =
-        computed === 'mine' ? 'available' : (computed as TableStatus)
+        computed === 'mine-pending'
+          ? 'available' // mon hold actuel : cliquable pour deselect
+          : computed === 'mine-locked'
+            ? 'booked' // mon billet déjà acheté : verrouillé
+            : (computed as TableStatus)
       return {
         id: t.id,
         label: t.label,

@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatXof } from '@sev7/shared'
+import { formatXof, useAuth } from '@sev7/shared'
 import { visualVariant } from '@sev7/shared'
 import { CoverImage } from '@sev7/shared'
+import { useRealtimeRefresh } from '../hooks/useRealtimeRefresh'
 
 type EventRow = {
   id: string
@@ -17,13 +18,13 @@ type EventRow = {
 type Mode = 'club' | 'restaurant'
 
 export function HomePage() {
+  const { session } = useAuth()
   const [events, setEvents] = useState<EventRow[]>([])
   const [mode, setMode] = useState<Mode>('club')
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    let active = true
-    supabase
+  const fetchEvents = useCallback(async () => {
+    const { data } = await supabase
       .from('events')
       .select(
         'id, title, room_label, starts_at, poster_url, venues(name, city, kind)',
@@ -31,13 +32,14 @@ export function HomePage() {
       .eq('status', 'published')
       .gte('starts_at', new Date().toISOString())
       .order('starts_at', { ascending: true })
-      .then(({ data }) => {
-        if (active) setEvents((data ?? []) as unknown as EventRow[])
-      })
-    return () => {
-      active = false
-    }
+    setEvents((data ?? []) as unknown as EventRow[])
   }, [])
+
+  useEffect(() => {
+    void Promise.resolve().then(fetchEvents)
+  }, [fetchEvents])
+
+  useRealtimeRefresh(['events'], fetchEvents)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -52,7 +54,28 @@ export function HomePage() {
   return (
     <main className="home-page">
       <header className="home-top">
-        <div className="home-avatar" aria-hidden />
+        {session ? (
+          <Link
+            to="/account"
+            className="home-avatar"
+            aria-label="Mon compte"
+            title="Mon compte"
+          >
+            {session.user?.email?.[0]?.toUpperCase() ?? '?'}
+          </Link>
+        ) : (
+          <Link
+            to="/auth/login"
+            className="home-avatar home-avatar--guest"
+            aria-label="Se connecter"
+            title="Se connecter"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21a8 8 0 0116 0" strokeLinecap="round" />
+            </svg>
+          </Link>
+        )}
         <div className="search-bar">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="7" />
@@ -72,7 +95,7 @@ export function HomePage() {
         </button>
       </header>
 
-      <div className="segmented" role="tablist">
+      <div className="segmented segmented--center" role="tablist">
         <button
           type="button"
           role="tab"
@@ -80,6 +103,11 @@ export function HomePage() {
           className={mode === 'club' ? 'active' : ''}
           onClick={() => setMode('club')}
         >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M9 18V5l12-2v13" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
           Club
         </button>
         <button
@@ -89,6 +117,9 @@ export function HomePage() {
           className={mode === 'restaurant' ? 'active' : ''}
           onClick={() => setMode('restaurant')}
         >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M5 3v8a2 2 0 002 2v8M9 3v8a2 2 0 01-2 2M19 3a4 4 0 00-4 4v6h4M19 13v8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           Restaurant
         </button>
       </div>

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatDateTimeFr, formatXof } from '@sev7/shared'
 import { CoverImage } from '@sev7/shared'
+import { ViewToggle } from '../components/ViewToggle'
+import { useViewMode } from '../hooks/useViewMode'
 
 type TicketRow = {
   id: string
@@ -16,6 +18,7 @@ type TicketRow = {
 export function TicketsPage() {
   const [tickets, setTickets] = useState<TicketRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [view, setView] = useViewMode('tickets.view', 'grid')
 
   useEffect(() => {
     let active = true
@@ -40,14 +43,19 @@ export function TicketsPage() {
   return (
     <main className="tickets-page">
       <header className="page-head">
-        <h1>Mes billets</h1>
         <Link to="/" className="back-link">← Accueil</Link>
+        <h1>Mes billets</h1>
+        {tickets.length > 0 && (
+          <div className="page-head-actions">
+            <ViewToggle mode={view} onChange={setView} />
+          </div>
+        )}
       </header>
       {loading && <p className="page-loading">Chargement…</p>}
       {!loading && tickets.length === 0 && (
         <p className="empty">Aucun billet pour l'instant.</p>
       )}
-      <ul className="tickets-list">
+      <ul className={`tickets-list view-${view}`}>
         {tickets.map((t) => (
           <li key={t.id}>
             <Link to={`/tickets/${t.id}`} className="list-card">
@@ -62,7 +70,7 @@ export function TicketsPage() {
                     Table {t.tables?.label} · {t.tables?.zone}
                   </p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
+                <div className="list-card-foot">
                   <span className="list-card-price">{formatXof(t.total_xof)}</span>
                   <span className={`badge badge--${t.status}`}>{t.status}</span>
                 </div>

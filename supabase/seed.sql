@@ -69,13 +69,13 @@ insert into public.menu_categories (id, venue_id, name, sort) values
   ('aaaa1111-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111', 'Sans alcool', 4)
 on conflict do nothing;
 
-insert into public.menu_items (category_id, name, description, price_xof) values
-  ('aaaa1111-0000-0000-0000-000000000001', 'Moët Brut', 'Bouteille 75cl', 95000),
-  ('aaaa1111-0000-0000-0000-000000000001', 'Veuve Clicquot', 'Bouteille 75cl', 110000),
-  ('aaaa1111-0000-0000-0000-000000000002', 'Hennessy VSOP', 'Bouteille 70cl', 75000),
-  ('aaaa1111-0000-0000-0000-000000000002', 'Grey Goose', 'Bouteille 70cl', 70000),
-  ('aaaa1111-0000-0000-0000-000000000003', 'Mojito', 'Rhum, menthe, citron', 7000),
-  ('aaaa1111-0000-0000-0000-000000000003', 'Margarita', 'Tequila, citron, sel', 7500),
-  ('aaaa1111-0000-0000-0000-000000000004', 'Bissap', 'Hibiscus glacé', 3000),
-  ('aaaa1111-0000-0000-0000-000000000004', 'Eau minérale', '50cl', 1500)
+insert into public.menu_items (category_id, name, description, price_xof, image_url) values
+  ('aaaa1111-0000-0000-0000-000000000001', 'Moët Brut', 'Bouteille 75cl', 95000, 'https://images.unsplash.com/photo-1592073260317-bf7b78115280?w=400&q=80'),
+  ('aaaa1111-0000-0000-0000-000000000001', 'Veuve Clicquot', 'Bouteille 75cl', 110000, 'https://images.unsplash.com/photo-1547595628-c61a29f496f0?w=400&q=80'),
+  ('aaaa1111-0000-0000-0000-000000000002', 'Hennessy VSOP', 'Bouteille 70cl', 75000, 'https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=400&q=80'),
+  ('aaaa1111-0000-0000-0000-000000000002', 'Grey Goose', 'Bouteille 70cl', 70000, 'https://images.unsplash.com/photo-1607622750671-6cd9a99eabd1?w=400&q=80'),
+  ('aaaa1111-0000-0000-0000-000000000003', 'Mojito', 'Rhum, menthe, citron', 7000, 'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=400&q=80'),
+  ('aaaa1111-0000-0000-0000-000000000003', 'Margarita', 'Tequila, citron, sel', 7500, 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80'),
+  ('aaaa1111-0000-0000-0000-000000000004', 'Bissap', 'Hibiscus glacé', 3000, 'https://images.unsplash.com/photo-1556881286-fc6915169721?w=400&q=80'),
+  ('aaaa1111-0000-0000-0000-000000000004', 'Eau minérale', '50cl', 1500, 'https://images.unsplash.com/photo-1564725075388-cc5970130dab?w=400&q=80')
 on conflict do nothing;

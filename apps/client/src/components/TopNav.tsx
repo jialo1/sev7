@@ -1,6 +1,6 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { useAuth, signOut } from '@sev7/shared'
+import { useAuth } from '@sev7/shared'
 
 const links = [
   { to: '/', label: 'Accueil', end: true },
@@ -10,7 +10,7 @@ const links = [
 ]
 
 export function TopNav() {
-  const { session, role } = useAuth()
+  const { session, loading } = useAuth()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
 
@@ -54,28 +54,21 @@ export function TopNav() {
         </form>
 
         <div className="top-actions">
-          {session ? (
+          {loading ? (
+            <span className="top-action-skeleton" aria-hidden />
+          ) : session ? (
             <>
               <Link to="/account" className="top-action-link">
                 Mon compte
               </Link>
-              {(role === 'admin' || role === 'staff' || role === 'scanner') && (
-                <a
-                  href={`${import.meta.env.VITE_PRO_URL ?? 'http://localhost:5174'}/auth/login?email=${encodeURIComponent(session.user?.email ?? '')}`}
-                  className="top-action-link top-action-link--accent"
-                >
-                  → SEV7 Pro
-                </a>
-              )}
-              <button
-                type="button"
+              <Link
+                to="/account"
                 className="top-avatar"
-                onClick={() => signOut()}
-                aria-label="Se déconnecter"
-                title="Déconnexion"
+                aria-label="Mon compte"
+                title="Mon compte"
               >
                 {session.user?.email?.[0]?.toUpperCase() ?? '?'}
-              </button>
+              </Link>
             </>
           ) : (
             <Link to="/auth/login" className="btn-outline btn-outline--compact">

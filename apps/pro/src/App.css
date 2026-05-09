@@ -903,3 +903,82 @@ main,
   from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
 }
+
+.admin-topbar-brand {
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  font-size: 0.78rem;
+}
+
+/* —— Login Google + séparateur (réutilise le style client) —— */
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: #1f1f1f;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn-google:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.btn-google:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.separator {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 1.25rem 0;
+  color: var(--text-mute);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.separator::before,
+.separator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* Tabs segmented sur la login pro */
+.pro-auth-card .segmented {
+  display: inline-flex;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.pro-auth-card .segmented button {
+  padding: 0.5rem 1.1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.pro-auth-card .segmented button.active {
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-warm) 100%);
+  color: #1a1207;
+}

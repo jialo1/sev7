@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatDateTimeFr, formatXof } from '@sev7/shared'
 import { CoverImage } from '@sev7/shared'
+import { ViewToggle } from '../../components/ViewToggle'
+import { useViewMode } from '../../hooks/useViewMode'
 
 type Row = {
   id: string
@@ -16,6 +18,7 @@ type Row = {
 export function AccountHistoryPage() {
   const [rows, setRows] = useState<Row[]>([])
   const [loading, setLoading] = useState(true)
+  const [view, setView] = useViewMode('history.view', 'grid')
 
   useEffect(() => {
     let active = true
@@ -40,14 +43,19 @@ export function AccountHistoryPage() {
   return (
     <main className="account-page">
       <header className="page-head">
-        <h1>Historique</h1>
         <Link to="/account" className="back-link">← Mon compte</Link>
+        <h1>Historique</h1>
+        {rows.length > 0 && (
+          <div className="page-head-actions">
+            <ViewToggle mode={view} onChange={setView} />
+          </div>
+        )}
       </header>
       {loading && <p className="page-loading">Chargement…</p>}
       {!loading && rows.length === 0 && (
         <p className="empty">Aucune soirée passée pour le moment.</p>
       )}
-      <ul className="tickets-list">
+      <ul className={`tickets-list view-${view}`}>
         {rows.map((r) => (
           <li key={r.id}>
             <div className="list-card">
@@ -62,7 +70,7 @@ export function AccountHistoryPage() {
                     Table {r.tables?.label} · {r.tables?.zone}
                   </p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
+                <div className="list-card-foot">
                   <span className="list-card-price">{formatXof(r.total_xof)}</span>
                   <span className={`badge badge--${r.status}`}>{r.status}</span>
                 </div>

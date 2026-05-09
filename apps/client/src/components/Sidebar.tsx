@@ -6,20 +6,24 @@ type Props = {
   selected: ClubTable | null
   onBack: () => void
   onContinue?: () => void
+  onCancel?: () => void
 }
 
-export function Sidebar({ event, selected, onBack, onContinue }: Props) {
+export function Sidebar({ event, selected, onBack, onContinue, onCancel }: Props) {
   return (
     <aside className="sidebar" aria-label="Détails de la soirée">
       <div className="sidebar-inner">
         <header className="sidebar-top">
-          <button type="button" className="icon-btn" aria-label="Accueil">
-            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
-              <path
-                fill="currentColor"
-                d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5z"
-              />
+          <button
+            type="button"
+            className="back-pill"
+            onClick={onBack}
+            aria-label="Revenir à la soirée"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M15 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
+            <span>Retour</span>
           </button>
           <span className="logo-mark">{event.venueName}</span>
         </header>
@@ -63,11 +67,26 @@ export function Sidebar({ event, selected, onBack, onContinue }: Props) {
           <div className="selection-box">
             {selected ? (
               <>
-                <p className="selection-title">Table {selected.label}</p>
-                <p className="selection-meta">
-                  {selected.zone} · {selected.capacity} pers. ·{' '}
-                  {formatXof(selected.priceXof)}
-                </p>
+                <div className="selection-head">
+                  <div>
+                    <p className="selection-title">Table {selected.label}</p>
+                    <p className="selection-meta">
+                      {selected.zone} · {selected.capacity} pers. ·{' '}
+                      {formatXof(selected.priceXof)}
+                    </p>
+                  </div>
+                  {onCancel && (
+                    <button
+                      type="button"
+                      className="selection-cancel"
+                      onClick={onCancel}
+                      aria-label="Annuler la sélection"
+                      title="Annuler la sélection"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               </>
             ) : (
               <p className="selection-empty">Aucune table sélectionnée</p>
