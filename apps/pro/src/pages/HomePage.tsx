@@ -9,6 +9,7 @@ export function ProHomePage() {
   useEffect(() => {
     if (loading || !session || !role) return
     if (role === 'admin') navigate('/admin', { replace: true })
+    else if (role === 'organizer') navigate('/admin', { replace: true })
     else if (role === 'staff') navigate('/staff/dashboard', { replace: true })
     else if (role === 'scanner') navigate('/scan', { replace: true })
   }, [role, session, loading, navigate])

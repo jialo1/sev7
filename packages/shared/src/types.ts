@@ -16,7 +16,7 @@ export type PaymentMethod =
   | 'cinetpay_cb'
   | 'on_site'
 
-export type ProfileRole = 'customer' | 'scanner' | 'staff' | 'admin'
+export type ProfileRole = 'customer' | 'scanner' | 'organizer' | 'staff' | 'admin'
 
 export interface Profile {
   id: string

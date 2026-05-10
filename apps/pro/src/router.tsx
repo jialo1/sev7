@@ -13,12 +13,15 @@ import { AdminMenuPage } from './pages/admin/MenuPage'
 import { AdminBookingsPage } from './pages/admin/BookingsPage'
 import { AdminTablesEditorPage } from './pages/admin/TablesEditorPage'
 import { AdminStatsPage } from './pages/admin/StatsPage'
+import { OrganizerScannersPage } from './pages/admin/ScannersPage'
 import { DashboardPage } from './pages/staff/DashboardPage'
 import { ScanPage } from './pages/staff/ScanPage'
 import { RoleGuard } from '@sev7/shared'
 
 const SCAN_ROLES = ['scanner', 'staff', 'admin'] as const
 const STAFF_ROLES = ['staff', 'admin'] as const
+const PRO_ROLES = ['admin', 'organizer'] as const
+const ADMIN_ONLY = ['admin'] as const
 
 export const router = createBrowserRouter([
   {
@@ -51,20 +54,50 @@ export const router = createBrowserRouter([
   {
     path: '/admin',
     element: (
-      <RoleGuard role="admin">
+      <RoleGuard role={[...PRO_ROLES]}>
         <AdminLayout />
       </RoleGuard>
     ),
     children: [
       { index: true, element: <AdminHomePage /> },
-      { path: 'users', element: <AdminUsersPage /> },
       { path: 'events', element: <AdminEventsListPage /> },
       { path: 'events/new', element: <AdminEventEditPage /> },
       { path: 'events/:id', element: <AdminEventEditPage /> },
-      { path: 'menu', element: <AdminMenuPage /> },
       { path: 'bookings', element: <AdminBookingsPage /> },
-      { path: 'tables', element: <AdminTablesEditorPage /> },
-      { path: 'stats', element: <AdminStatsPage /> },
+      { path: 'scanners', element: <OrganizerScannersPage /> },
+      // Routes admin-only — protégées par un guard supplémentaire
+      {
+        path: 'users',
+        element: (
+          <RoleGuard role={[...ADMIN_ONLY]}>
+            <AdminUsersPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: 'menu',
+        element: (
+          <RoleGuard role={[...ADMIN_ONLY]}>
+            <AdminMenuPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: 'tables',
+        element: (
+          <RoleGuard role={[...ADMIN_ONLY]}>
+            <AdminTablesEditorPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: 'stats',
+        element: (
+          <RoleGuard role={[...ADMIN_ONLY]}>
+            <AdminStatsPage />
+          </RoleGuard>
+        ),
+      },
     ],
   },
 ])

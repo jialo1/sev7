@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '@sev7/shared'
+import { EventCoverUpload } from '../../components/admin/EventCoverUpload'
 
 type Venue = { id: string; name: string; kind: 'club' | 'restaurant' }
 
@@ -26,6 +28,9 @@ export function AdminEventEditPage() {
   const { id } = useParams<{ id: string }>()
   const isNew = !id || id === 'new'
   const navigate = useNavigate()
+  const { user, role } = useAuth()
+  const isOrganizer = role === 'organizer'
+
   const [venues, setVenues] = useState<Venue[]>([])
   const [form, setForm] = useState<Form>(EMPTY)
   const [busy, setBusy] = useState(false)
@@ -68,9 +73,10 @@ export function AdminEventEditPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
+    if (!user) return
     setBusy(true)
     setError(null)
-    const payload = {
+    const payload: Record<string, unknown> = {
       venue_id: form.venue_id,
       title: form.title.trim(),
       room_label: form.room_label.trim(),
@@ -78,6 +84,10 @@ export function AdminEventEditPage() {
       poster_url: form.poster_url.trim() || null,
       status: form.status,
     }
+    if (isNew && isOrganizer) {
+      payload.organizer_id = user.id
+    }
+
     const { error: err } = isNew
       ? await supabase.from('events').insert(payload)
       : await supabase.from('events').update(payload).eq('id', id)
@@ -100,7 +110,9 @@ export function AdminEventEditPage() {
 
   return (
     <div className="admin-page">
-      <h1 className="admin-h1">{isNew ? 'Nouvelle soirée' : 'Modifier la soirée'}</h1>
+      <h1 className="admin-h1">
+        {isNew ? 'Nouvelle soirée' : 'Modifier la soirée'}
+      </h1>
 
       <form onSubmit={submit} className="admin-form">
         <label>
@@ -156,16 +168,14 @@ export function AdminEventEditPage() {
           </label>
         </div>
 
-        <label>
-          Poster (URL image)
-          <input
-            type="url"
-            value={form.poster_url}
-            onChange={(e) => update('poster_url', e.target.value)}
-            className="admin-input"
-            placeholder="https://…"
+        {user && (
+          <EventCoverUpload
+            imageUrl={form.poster_url}
+            onImageUrlChange={(url) => update('poster_url', url)}
+            ownerId={user.id}
+            disabled={busy}
           />
-        </label>
+        )}
 
         <label>
           Statut

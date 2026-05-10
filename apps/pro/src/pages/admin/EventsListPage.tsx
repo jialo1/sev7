@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { formatDateTimeFr } from '@sev7/shared'
+import { formatDateTimeFr, useAuth } from '@sev7/shared'
 
 type EventRow = {
   id: string
@@ -16,22 +16,28 @@ type EventRow = {
 const STATUSES = ['draft', 'published', 'archived'] as const
 
 export function AdminEventsListPage() {
+  const { user, role } = useAuth()
   const [events, setEvents] = useState<EventRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
-  async function refresh() {
-    const { data, error } = await supabase
+  const refresh = useCallback(async () => {
+    if (!user) return
+    let q = supabase
       .from('events')
       .select('id, title, room_label, starts_at, status, poster_url, venues(name)')
       .order('starts_at', { ascending: true })
+    // Organizer ne voit QUE ses events (sinon RLS public_select fait
+    // remonter les events publiés des autres).
+    if (role === 'organizer') q = q.eq('organizer_id', user.id)
+    const { data, error } = await q
     if (error) setError(error.message)
     else setEvents((data ?? []) as unknown as EventRow[])
-  }
+  }, [user, role])
 
   useEffect(() => {
-    void Promise.resolve().then(refresh)
-  }, [])
+    void refresh()
+  }, [refresh])
 
   async function setStatus(id: string, status: EventRow['status']) {
     setBusyId(id)
