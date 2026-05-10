@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatXof } from '@sev7/shared'
+import { formatXof, useAuth } from '@sev7/shared'
 
 type OrderRow = {
   id: string
@@ -12,27 +12,39 @@ type OrderRow = {
 }
 
 export function OrdersPage() {
+  const { user } = useAuth()
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    let active = true
-    supabase
+  const fetchOrders = useCallback(async () => {
+    const { data } = await supabase
       .from('orders')
-      .select(
-        'id, status, total_xof, created_at, bookings(id, tables(label))',
-      )
+      .select('id, status, total_xof, created_at, bookings(id, tables(label))')
       .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        if (active) {
-          setOrders((data ?? []) as unknown as OrderRow[])
-          setLoading(false)
-        }
-      })
-    return () => {
-      active = false
-    }
+    setOrders((data ?? []) as unknown as OrderRow[])
+    setLoading(false)
   }, [])
+
+  useEffect(() => {
+    void fetchOrders()
+  }, [fetchOrders])
+
+  useEffect(() => {
+    if (!user) return
+    const channel = supabase
+      .channel(`orders:user=${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        () => {
+          void fetchOrders()
+        },
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user, fetchOrders])
 
   return (
     <main className="orders-page">

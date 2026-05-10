@@ -126,7 +126,9 @@ export function CheckoutPage() {
             />
           </div>
           <div>
-            <h3>{booking.events?.title ?? 'Réservation'}</h3>
+            <h3>
+              {booking.events?.title ?? `Restaurant · ${booking.party_size} pers.`}
+            </h3>
             <p>{booking.venues?.name} · {booking.venues?.city}</p>
           </div>
         </div>
