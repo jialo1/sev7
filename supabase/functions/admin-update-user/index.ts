@@ -1,15 +1,18 @@
 // Update d'un user par l'admin : email, full_name, phone, role.
 // Le rôle passe par le même trigger (admin) du DB. Self-edit du caller bloqué
 // pour éviter les self-locks.
-import { json, preflight } from '../_shared/cors.ts'
+import { json, originGuard, preflight } from '../_shared/cors.ts'
+import { logAudit } from '../_shared/audit.ts'
 import { requireAdmin } from '../_shared/guard.ts'
 
-const ROLES = ['customer', 'scanner', 'staff', 'admin'] as const
+const ROLES = ['customer', 'scanner', 'organizer', 'staff', 'admin'] as const
 type Role = (typeof ROLES)[number]
 
 Deno.serve(async (req) => {
   const pre = preflight(req)
   if (pre) return pre
+  const blocked = originGuard(req)
+  if (blocked) return blocked
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, { status: 405 })
 
   const guard = await requireAdmin(req)
@@ -45,6 +48,18 @@ Deno.serve(async (req) => {
     const { error } = await sb.from('profiles').update(updates).eq('id', user_id)
     if (error) return json({ error: error.message }, { status: 500 })
   }
+
+  await logAudit(sb, req, caller, {
+    action: 'admin.user_updated',
+    resource_type: 'user',
+    resource_id: user_id,
+    actor_role: 'admin',
+    metadata: {
+      email_changed: typeof email === 'string',
+      role_changed: !!role,
+      new_role: role ?? null,
+    },
+  })
 
   return json({ ok: true })
 })

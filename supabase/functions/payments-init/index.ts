@@ -1,6 +1,8 @@
 // Initialise un paiement CinetPay pour un booking pending et renvoie l'URL hosted checkout.
 // Doc CinetPay : https://docs.cinetpay.com/api/1.0-fr/checkout/initialisation
-import { json, preflight } from '../_shared/cors.ts'
+import { json, originGuard, preflight } from '../_shared/cors.ts'
+import { consumeRateLimit, RATE_LIMITS, clientIp } from '../_shared/rateLimit.ts'
+import { logAudit } from '../_shared/audit.ts'
 import { adminClient, userFromAuthHeader } from '../_shared/supabase.ts'
 
 const CINETPAY_URL = 'https://api-checkout.cinetpay.com/v2/payment'
@@ -14,9 +16,23 @@ const METHOD_CHANNELS: Record<string, string> = {
 Deno.serve(async (req) => {
   const pre = preflight(req)
   if (pre) return pre
+  const blocked = originGuard(req)
+  if (blocked) return blocked
 
   const user = await userFromAuthHeader(req)
   if (!user) return json({ error: 'unauthorized' }, { status: 401 })
+
+  const rl = consumeRateLimit(
+    `payments-init:${user.id}:${clientIp(req)}`,
+    RATE_LIMITS.paymentsInit.max,
+    RATE_LIMITS.paymentsInit.windowMs,
+  )
+  if (!rl.ok) {
+    return json(
+      { error: 'rate_limited', retry_after_sec: rl.retryAfterSec },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
+    )
+  }
 
   const { booking_id, method } = await req.json()
   if (!booking_id || !METHOD_CHANNELS[method]) {
@@ -56,6 +72,16 @@ Deno.serve(async (req) => {
       status: 'accepted',
       raw: { mock: true, reason: 'cinetpay_not_configured_dev_only' },
     })
+    await logAudit(sb, req, user, {
+      action: 'payment.mock_paid',
+      resource_type: 'booking',
+      resource_id: booking.id,
+      metadata: { method, total_xof: booking.total_xof },
+    })
+    // Best-effort : envoie le mail de confirmation.
+    sb.functions
+      .invoke('send-booking-confirmation', { body: { booking_id: booking.id } })
+      .catch(() => {})
     return json({ payment_url: returnUrl, mock: true })
   }
 
@@ -94,6 +120,13 @@ Deno.serve(async (req) => {
   })
 
   await sb.from('bookings').update({ payment_method: method }).eq('id', booking.id)
+
+  await logAudit(sb, req, user, {
+    action: 'payment.initiated',
+    resource_type: 'booking',
+    resource_id: booking.id,
+    metadata: { method, provider: 'cinetpay', total_xof: booking.total_xof },
+  })
 
   return json({ payment_url: cpJson.data.payment_url })
 })

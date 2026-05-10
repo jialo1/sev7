@@ -1,5 +1,6 @@
 // Webhook CinetPay : on (re)vérifie la transaction côté serveur et on flip le booking en 'paid'.
 import { json, preflight } from '../_shared/cors.ts'
+import { logAudit } from '../_shared/audit.ts'
 import { adminClient } from '../_shared/supabase.ts'
 
 const CINETPAY_CHECK_URL = 'https://api-checkout.cinetpay.com/v2/payment/check'
@@ -38,11 +39,35 @@ Deno.serve(async (req) => {
     .eq('booking_id', transactionId)
 
   if (accepted) {
-    await sb
+    const { data: updated } = await sb
       .from('bookings')
       .update({ status: 'paid' })
       .eq('id', transactionId)
       .in('status', ['pending', 'reserved'])
+      .select('id')
+      .maybeSingle()
+
+    if (updated) {
+      await logAudit(sb, req, null, {
+        action: 'payment.webhook_paid',
+        resource_type: 'booking',
+        resource_id: transactionId,
+        actor_email: 'cinetpay-webhook',
+        metadata: { provider: 'cinetpay' },
+      })
+      // Best-effort : envoie le mail de confirmation.
+      sb.functions
+        .invoke('send-booking-confirmation', { body: { booking_id: transactionId } })
+        .catch(() => {})
+    }
+  } else {
+    await logAudit(sb, req, null, {
+      action: 'payment.webhook_refused',
+      resource_type: 'booking',
+      resource_id: transactionId,
+      actor_email: 'cinetpay-webhook',
+      metadata: { status, raw: data?.message ?? null },
+    })
   }
 
   return json({ ok: true, accepted })

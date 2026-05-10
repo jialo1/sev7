@@ -1,5 +1,7 @@
 // Vérifie un JWT scanné, marque le booking en 'attended' (single-use), retourne nom + table.
-import { json, preflight } from '../_shared/cors.ts'
+import { json, originGuard, preflight } from '../_shared/cors.ts'
+import { consumeRateLimit, RATE_LIMITS, clientIp } from '../_shared/rateLimit.ts'
+import { logAudit } from '../_shared/audit.ts'
 import { adminClient, userFromAuthHeader } from '../_shared/supabase.ts'
 import { jwtVerify } from 'https://esm.sh/jose@5'
 
@@ -15,9 +17,23 @@ async function sha256Hex(input: string): Promise<string> {
 Deno.serve(async (req) => {
   const pre = preflight(req)
   if (pre) return pre
+  const blocked = originGuard(req)
+  if (blocked) return blocked
 
   const user = await userFromAuthHeader(req)
   if (!user) return json({ error: 'unauthorized' }, { status: 401 })
+
+  const rl = consumeRateLimit(
+    `tickets-validate:${user.id}:${clientIp(req)}`,
+    RATE_LIMITS.ticketsValidate.max,
+    RATE_LIMITS.ticketsValidate.windowMs,
+  )
+  if (!rl.ok) {
+    return json(
+      { ok: false, reason: 'Trop de scans, réessaie' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
+    )
+  }
 
   const sb = adminClient()
   const { data: profile } = await sb
@@ -69,6 +85,13 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (!updated) return json({ ok: false, reason: 'Déjà utilisé' })
+
+    await logAudit(sb, req, user, {
+      action: 'ticket.validated',
+      resource_type: 'booking',
+      resource_id: booking.id,
+      actor_role: profile.role,
+    })
 
     const { data: guestProfile } = await sb
       .from('profiles')

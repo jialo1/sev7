@@ -1,18 +1,34 @@
 // Création d'un user par l'admin : email + password + (optionnel) nom, tél, rôle.
-import { json, preflight } from '../_shared/cors.ts'
+import { json, originGuard, preflight } from '../_shared/cors.ts'
+import { consumeRateLimit, RATE_LIMITS, clientIp } from '../_shared/rateLimit.ts'
+import { logAudit } from '../_shared/audit.ts'
 import { requireAdmin } from '../_shared/guard.ts'
 
-const ROLES = ['customer', 'scanner', 'staff', 'admin'] as const
+const ROLES = ['customer', 'scanner', 'organizer', 'staff', 'admin'] as const
 type Role = (typeof ROLES)[number]
 
 Deno.serve(async (req) => {
   const pre = preflight(req)
   if (pre) return pre
+  const blocked = originGuard(req)
+  if (blocked) return blocked
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, { status: 405 })
 
   const guard = await requireAdmin(req)
   if ('error' in guard) return guard.error
-  const sb = guard.sb
+  const { user: actor, sb } = guard
+
+  const rl = consumeRateLimit(
+    `admin-create-user:${actor.id}:${clientIp(req)}`,
+    RATE_LIMITS.adminCreateUser.max,
+    RATE_LIMITS.adminCreateUser.windowMs,
+  )
+  if (!rl.ok) {
+    return json(
+      { error: 'rate_limited', retry_after_sec: rl.retryAfterSec },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
+    )
+  }
 
   const { email, password, full_name, phone, role } = await req.json()
 
@@ -49,6 +65,17 @@ Deno.serve(async (req) => {
       .eq('id', created.user.id)
     if (profileErr) return json({ error: profileErr.message }, { status: 500 })
   }
+
+  await logAudit(sb, req, actor, {
+    action: 'admin.user_created',
+    resource_type: 'user',
+    resource_id: created.user.id,
+    actor_role: 'admin',
+    metadata: {
+      target_email: email,
+      target_role: role ?? 'customer',
+    },
+  })
 
   return json({
     ok: true,
