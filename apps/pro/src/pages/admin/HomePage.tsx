@@ -71,18 +71,20 @@ export function AdminHomePage() {
         scopedEventIds = events.map((e) => e.id)
       }
 
-      const bookingsBase = supabase.from('bookings').select('id', {
-        count: 'exact',
-        head: true,
-      })
-
-      const scopeBookings = <Q extends typeof bookingsBase>(q: Q) =>
-        scopedEventIds === null
-          ? q
-          : scopedEventIds.length === 0
-            ? // pas d'events → forcer count=0
-              q.eq('id', '00000000-0000-0000-0000-000000000000')
-            : q.in('event_id', scopedEventIds)
+      // Scope helper : applique le filtre event_id IN ... aux query builders
+      // bookings quand l'organizer n'a pas tous les events. `unknown` cast
+      // local : Postgrest renvoie le même builder type sur eq/in.
+      const scopeBookings = <Q,>(q: Q): Q => {
+        if (scopedEventIds === null) return q
+        const builder = q as unknown as {
+          eq: (col: string, val: string) => Q
+          in: (col: string, vals: string[]) => Q
+        }
+        if (scopedEventIds.length === 0) {
+          return builder.eq('id', '00000000-0000-0000-0000-000000000000')
+        }
+        return builder.in('event_id', scopedEventIds)
+      }
 
       const [
         bkAll,
