@@ -28,6 +28,13 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Le nouveau SW prend le contrôle immédiatement au reload, sans
+        // attendre que tous les onglets soient fermés. Évite que les users
+        // restent bloqués sur un ancien index.html cached (typique quand on
+        // touche au CSP / aux env vars).
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         navigateFallbackDenylist: [/^\/functions/, /\/auth\/callback/],
         runtimeCaching: [
           {
