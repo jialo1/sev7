@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatXof, useAuth } from '@sev7/shared'
+import { formatXof, useAuth, HomeSkeleton } from '@sev7/shared'
 import { visualVariant } from '@sev7/shared'
 import { CoverImage } from '@sev7/shared'
 import { useRealtimeRefresh } from '../hooks/useRealtimeRefresh'
@@ -20,6 +20,7 @@ type Mode = 'club' | 'restaurant'
 export function HomePage() {
   const { session } = useAuth()
   const [events, setEvents] = useState<EventRow[]>([])
+  const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<Mode>('club')
   const [search, setSearch] = useState('')
 
@@ -33,6 +34,7 @@ export function HomePage() {
       .gte('starts_at', new Date().toISOString())
       .order('starts_at', { ascending: true })
     setEvents((data ?? []) as unknown as EventRow[])
+    setLoading(false)
   }, [])
 
   useEffect(() => {
@@ -181,8 +183,12 @@ export function HomePage() {
         </>
       )}
 
-      {filtered.length === 0 && (
-        <p className="empty">Pas de soirée pour le moment dans cette catégorie.</p>
+      {loading && events.length === 0 ? (
+        <HomeSkeleton />
+      ) : (
+        filtered.length === 0 && (
+          <p className="empty">Pas de soirée pour le moment dans cette catégorie.</p>
+        )
       )}
     </main>
   )

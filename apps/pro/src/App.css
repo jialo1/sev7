@@ -877,6 +877,58 @@ main,
   color: var(--text-mute);
 }
 
+/* ─── Audit log ─── */
+.audit-action {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
+
+.audit-action--ok {
+  background: rgba(94, 228, 163, 0.12);
+  color: var(--success);
+}
+
+.audit-action--info {
+  background: rgba(244, 163, 64, 0.1);
+  color: var(--accent);
+}
+
+.audit-action--warn {
+  background: rgba(212, 168, 87, 0.12);
+  color: var(--gold);
+}
+
+.audit-action--danger {
+  background: rgba(239, 83, 80, 0.12);
+  color: var(--danger);
+}
+
+.audit-meta {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+  background: var(--bg-2);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
 /* Wire helper sizes */
 .wire-h1 { height: 30px; width: 240px; }
 .wire-sub { height: 14px; width: 320px; max-width: 100%; margin-top: 0.5rem; }

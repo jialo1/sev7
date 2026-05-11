@@ -31,6 +31,11 @@ const ADMIN_ITEMS: Item[] = [
     label: 'Statistiques',
     isActive: (p) => p.startsWith('/admin/stats'),
   },
+  {
+    to: '/admin/audit',
+    label: 'Audit',
+    isActive: (p) => p.startsWith('/admin/audit'),
+  },
 ]
 
 const ORGANIZER_ITEMS: Item[] = [

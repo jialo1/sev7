@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatDateTimeFr, formatXof } from '@sev7/shared'
+import { formatDateTimeFr, formatXof, ListSkeleton } from '@sev7/shared'
 import { CoverImage } from '@sev7/shared'
 import { ViewToggle } from '../components/ViewToggle'
 import { useViewMode } from '../hooks/useViewMode'
@@ -51,7 +51,7 @@ export function TicketsPage() {
           </div>
         )}
       </header>
-      {loading && <p className="page-loading">Chargement…</p>}
+      {loading && <ListSkeleton count={3} />}
       {!loading && tickets.length === 0 && (
         <p className="empty">Aucun billet pour l'instant.</p>
       )}

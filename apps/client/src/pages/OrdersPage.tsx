@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatXof, useAuth } from '@sev7/shared'
+import { formatXof, useAuth, ListSkeleton } from '@sev7/shared'
 
 type OrderRow = {
   id: string
@@ -52,7 +52,7 @@ export function OrdersPage() {
         <h1>Mes commandes</h1>
         <Link to="/" className="back-link">← Accueil</Link>
       </header>
-      {loading && <p>Chargement…</p>}
+      {loading && <ListSkeleton count={2} />}
       {!loading && orders.length === 0 && <p className="empty">Aucune commande.</p>}
       <ul className="orders-list">
         {orders.map((o) => (

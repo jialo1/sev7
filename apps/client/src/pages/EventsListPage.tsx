@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatDateTimeFr, formatXof } from '@sev7/shared'
+import { formatDateTimeFr, formatXof, ListSkeleton } from '@sev7/shared'
 import { CoverImage } from '@sev7/shared'
 import { useRealtimeRefresh } from '../hooks/useRealtimeRefresh'
 
@@ -44,7 +44,7 @@ export function EventsListPage() {
         <Link to="/" className="back-link">← Accueil</Link>
       </header>
 
-      {loading && <p className="page-loading">Chargement…</p>}
+      {loading && <ListSkeleton count={4} />}
       {error && <p className="error">Erreur : {error}</p>}
       {!loading && !error && events.length === 0 && (
         <p className="empty">Aucune soirée programmée pour le moment.</p>

@@ -1,22 +1,74 @@
+/* eslint-disable react-refresh/only-export-components */
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter } from 'react-router-dom'
 import App from './App'
 import { HomePage } from './pages/HomePage'
-import { EventsListPage } from './pages/EventsListPage'
-import { EventDetailPage } from './pages/EventDetailPage'
-import { SeatSelectionPage } from './pages/SeatSelectionPage'
-import { CheckoutPage } from './pages/CheckoutPage'
-import { TicketsPage } from './pages/TicketsPage'
-import { TicketDetailPage } from './pages/TicketDetailPage'
-import { MenuPage } from './pages/MenuPage'
-import { OrdersPage } from './pages/OrdersPage'
-import { RestaurantHome } from './pages/RestaurantHome'
-import { RestaurantSeatPage } from './pages/RestaurantSeatPage'
-import { LoginPage } from './pages/auth/LoginPage'
-import { CallbackPage } from './pages/auth/CallbackPage'
-import { AccountHomePage } from './pages/account/HomePage'
-import { AccountProfilePage } from './pages/account/ProfilePage'
-import { AccountHistoryPage } from './pages/account/HistoryPage'
 import { RoleGuard } from '@sev7/shared'
+
+// Lazy : routes secondaires. La HomePage reste eager pour le 1er paint.
+const EventsListPage = lazy(() =>
+  import('./pages/EventsListPage').then((m) => ({ default: m.EventsListPage })),
+)
+const EventDetailPage = lazy(() =>
+  import('./pages/EventDetailPage').then((m) => ({ default: m.EventDetailPage })),
+)
+const SeatSelectionPage = lazy(() =>
+  import('./pages/SeatSelectionPage').then((m) => ({
+    default: m.SeatSelectionPage,
+  })),
+)
+const CheckoutPage = lazy(() =>
+  import('./pages/CheckoutPage').then((m) => ({ default: m.CheckoutPage })),
+)
+const TicketsPage = lazy(() =>
+  import('./pages/TicketsPage').then((m) => ({ default: m.TicketsPage })),
+)
+const TicketDetailPage = lazy(() =>
+  import('./pages/TicketDetailPage').then((m) => ({
+    default: m.TicketDetailPage,
+  })),
+)
+const MenuPage = lazy(() =>
+  import('./pages/MenuPage').then((m) => ({ default: m.MenuPage })),
+)
+const OrdersPage = lazy(() =>
+  import('./pages/OrdersPage').then((m) => ({ default: m.OrdersPage })),
+)
+const RestaurantHome = lazy(() =>
+  import('./pages/RestaurantHome').then((m) => ({ default: m.RestaurantHome })),
+)
+const RestaurantSeatPage = lazy(() =>
+  import('./pages/RestaurantSeatPage').then((m) => ({
+    default: m.RestaurantSeatPage,
+  })),
+)
+const LoginPage = lazy(() =>
+  import('./pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })),
+)
+const CallbackPage = lazy(() =>
+  import('./pages/auth/CallbackPage').then((m) => ({ default: m.CallbackPage })),
+)
+const AccountHomePage = lazy(() =>
+  import('./pages/account/HomePage').then((m) => ({ default: m.AccountHomePage })),
+)
+const AccountProfilePage = lazy(() =>
+  import('./pages/account/ProfilePage').then((m) => ({
+    default: m.AccountProfilePage,
+  })),
+)
+const AccountHistoryPage = lazy(() =>
+  import('./pages/account/HistoryPage').then((m) => ({
+    default: m.AccountHistoryPage,
+  })),
+)
+
+function Lazy({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<p className="page-loading">Chargement…</p>}>
+      {children}
+    </Suspense>
+  )
+}
 
 export const router = createBrowserRouter([
   {
@@ -24,13 +76,13 @@ export const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'events', element: <EventsListPage /> },
-      { path: 'events/:id', element: <EventDetailPage /> },
+      { path: 'events', element: <Lazy><EventsListPage /></Lazy> },
+      { path: 'events/:id', element: <Lazy><EventDetailPage /></Lazy> },
       {
         path: 'events/:id/seats',
         element: (
           <RoleGuard>
-            <SeatSelectionPage />
+            <Lazy><SeatSelectionPage /></Lazy>
           </RoleGuard>
         ),
       },
@@ -38,7 +90,7 @@ export const router = createBrowserRouter([
         path: 'checkout/:bookingId',
         element: (
           <RoleGuard>
-            <CheckoutPage />
+            <Lazy><CheckoutPage /></Lazy>
           </RoleGuard>
         ),
       },
@@ -46,7 +98,7 @@ export const router = createBrowserRouter([
         path: 'tickets',
         element: (
           <RoleGuard>
-            <TicketsPage />
+            <Lazy><TicketsPage /></Lazy>
           </RoleGuard>
         ),
       },
@@ -54,29 +106,29 @@ export const router = createBrowserRouter([
         path: 'tickets/:id',
         element: (
           <RoleGuard>
-            <TicketDetailPage />
+            <Lazy><TicketDetailPage /></Lazy>
           </RoleGuard>
         ),
       },
-      { path: 'menu', element: <MenuPage /> },
-      { path: 'restaurant/menu', element: <MenuPage /> },
+      { path: 'menu', element: <Lazy><MenuPage /></Lazy> },
+      { path: 'restaurant/menu', element: <Lazy><MenuPage /></Lazy> },
       {
         path: 'orders',
         element: (
           <RoleGuard>
-            <OrdersPage />
+            <Lazy><OrdersPage /></Lazy>
           </RoleGuard>
         ),
       },
-      { path: 'restaurant', element: <RestaurantHome /> },
-      { path: 'restaurant/seats', element: <RestaurantSeatPage /> },
-      { path: 'auth/login', element: <LoginPage /> },
-      { path: 'auth/callback', element: <CallbackPage /> },
+      { path: 'restaurant', element: <Lazy><RestaurantHome /></Lazy> },
+      { path: 'restaurant/seats', element: <Lazy><RestaurantSeatPage /></Lazy> },
+      { path: 'auth/login', element: <Lazy><LoginPage /></Lazy> },
+      { path: 'auth/callback', element: <Lazy><CallbackPage /></Lazy> },
       {
         path: 'account',
         element: (
           <RoleGuard>
-            <AccountHomePage />
+            <Lazy><AccountHomePage /></Lazy>
           </RoleGuard>
         ),
       },
@@ -84,7 +136,7 @@ export const router = createBrowserRouter([
         path: 'account/profile',
         element: (
           <RoleGuard>
-            <AccountProfilePage />
+            <Lazy><AccountProfilePage /></Lazy>
           </RoleGuard>
         ),
       },
@@ -92,7 +144,7 @@ export const router = createBrowserRouter([
         path: 'account/history',
         element: (
           <RoleGuard>
-            <AccountHistoryPage />
+            <Lazy><AccountHistoryPage /></Lazy>
           </RoleGuard>
         ),
       },

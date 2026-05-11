@@ -1,27 +1,78 @@
+/* eslint-disable react-refresh/only-export-components */
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import App from './App'
 import { ProHomePage } from './pages/HomePage'
 import { ProLoginPage } from './pages/auth/LoginPage'
 import { ProCallbackPage } from './pages/auth/CallbackPage'
-import { AdminLayout } from './layouts/AdminLayout'
-import { ScanLayout } from './layouts/ScanLayout'
-import { AdminHomePage } from './pages/admin/HomePage'
-import { AdminUsersPage } from './pages/admin/UsersPage'
-import { AdminEventsListPage } from './pages/admin/EventsListPage'
-import { AdminEventEditPage } from './pages/admin/EventEditPage'
-import { AdminMenuPage } from './pages/admin/MenuPage'
-import { AdminBookingsPage } from './pages/admin/BookingsPage'
-import { AdminTablesEditorPage } from './pages/admin/TablesEditorPage'
-import { AdminStatsPage } from './pages/admin/StatsPage'
-import { OrganizerScannersPage } from './pages/admin/ScannersPage'
-import { DashboardPage } from './pages/staff/DashboardPage'
-import { ScanPage } from './pages/staff/ScanPage'
 import { RoleGuard } from '@sev7/shared'
+
+// Layouts + pages lourdes en lazy.
+const AdminLayout = lazy(() =>
+  import('./layouts/AdminLayout').then((m) => ({ default: m.AdminLayout })),
+)
+const ScanLayout = lazy(() =>
+  import('./layouts/ScanLayout').then((m) => ({ default: m.ScanLayout })),
+)
+const AdminHomePage = lazy(() =>
+  import('./pages/admin/HomePage').then((m) => ({ default: m.AdminHomePage })),
+)
+const AdminUsersPage = lazy(() =>
+  import('./pages/admin/UsersPage').then((m) => ({ default: m.AdminUsersPage })),
+)
+const AdminEventsListPage = lazy(() =>
+  import('./pages/admin/EventsListPage').then((m) => ({
+    default: m.AdminEventsListPage,
+  })),
+)
+const AdminEventEditPage = lazy(() =>
+  import('./pages/admin/EventEditPage').then((m) => ({
+    default: m.AdminEventEditPage,
+  })),
+)
+const AdminMenuPage = lazy(() =>
+  import('./pages/admin/MenuPage').then((m) => ({ default: m.AdminMenuPage })),
+)
+const AdminBookingsPage = lazy(() =>
+  import('./pages/admin/BookingsPage').then((m) => ({
+    default: m.AdminBookingsPage,
+  })),
+)
+const AdminTablesEditorPage = lazy(() =>
+  import('./pages/admin/TablesEditorPage').then((m) => ({
+    default: m.AdminTablesEditorPage,
+  })),
+)
+const AdminStatsPage = lazy(() =>
+  import('./pages/admin/StatsPage').then((m) => ({ default: m.AdminStatsPage })),
+)
+const AdminAuditPage = lazy(() =>
+  import('./pages/admin/AuditPage').then((m) => ({ default: m.AdminAuditPage })),
+)
+const OrganizerScannersPage = lazy(() =>
+  import('./pages/admin/ScannersPage').then((m) => ({
+    default: m.OrganizerScannersPage,
+  })),
+)
+const DashboardPage = lazy(() =>
+  import('./pages/staff/DashboardPage').then((m) => ({ default: m.DashboardPage })),
+)
+const ScanPage = lazy(() =>
+  import('./pages/staff/ScanPage').then((m) => ({ default: m.ScanPage })),
+)
 
 const SCAN_ROLES = ['scanner', 'staff', 'admin'] as const
 const STAFF_ROLES = ['staff', 'admin'] as const
 const PRO_ROLES = ['admin', 'organizer'] as const
 const ADMIN_ONLY = ['admin'] as const
+
+function Lazy({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<p className="page-loading">Chargement…</p>}>
+      {children}
+    </Suspense>
+  )
+}
 
 export const router = createBrowserRouter([
   {
@@ -38,16 +89,16 @@ export const router = createBrowserRouter([
     path: '/scan',
     element: (
       <RoleGuard role={[...SCAN_ROLES]}>
-        <ScanLayout />
+        <Lazy><ScanLayout /></Lazy>
       </RoleGuard>
     ),
-    children: [{ index: true, element: <ScanPage /> }],
+    children: [{ index: true, element: <Lazy><ScanPage /></Lazy> }],
   },
   {
     path: '/staff/dashboard',
     element: (
       <RoleGuard role={[...STAFF_ROLES]}>
-        <DashboardPage />
+        <Lazy><DashboardPage /></Lazy>
       </RoleGuard>
     ),
   },
@@ -55,22 +106,21 @@ export const router = createBrowserRouter([
     path: '/admin',
     element: (
       <RoleGuard role={[...PRO_ROLES]}>
-        <AdminLayout />
+        <Lazy><AdminLayout /></Lazy>
       </RoleGuard>
     ),
     children: [
-      { index: true, element: <AdminHomePage /> },
-      { path: 'events', element: <AdminEventsListPage /> },
-      { path: 'events/new', element: <AdminEventEditPage /> },
-      { path: 'events/:id', element: <AdminEventEditPage /> },
-      { path: 'bookings', element: <AdminBookingsPage /> },
-      { path: 'scanners', element: <OrganizerScannersPage /> },
-      // Routes admin-only — protégées par un guard supplémentaire
+      { index: true, element: <Lazy><AdminHomePage /></Lazy> },
+      { path: 'events', element: <Lazy><AdminEventsListPage /></Lazy> },
+      { path: 'events/new', element: <Lazy><AdminEventEditPage /></Lazy> },
+      { path: 'events/:id', element: <Lazy><AdminEventEditPage /></Lazy> },
+      { path: 'bookings', element: <Lazy><AdminBookingsPage /></Lazy> },
+      { path: 'scanners', element: <Lazy><OrganizerScannersPage /></Lazy> },
       {
         path: 'users',
         element: (
           <RoleGuard role={[...ADMIN_ONLY]}>
-            <AdminUsersPage />
+            <Lazy><AdminUsersPage /></Lazy>
           </RoleGuard>
         ),
       },
@@ -78,7 +128,7 @@ export const router = createBrowserRouter([
         path: 'menu',
         element: (
           <RoleGuard role={[...ADMIN_ONLY]}>
-            <AdminMenuPage />
+            <Lazy><AdminMenuPage /></Lazy>
           </RoleGuard>
         ),
       },
@@ -86,7 +136,7 @@ export const router = createBrowserRouter([
         path: 'tables',
         element: (
           <RoleGuard role={[...ADMIN_ONLY]}>
-            <AdminTablesEditorPage />
+            <Lazy><AdminTablesEditorPage /></Lazy>
           </RoleGuard>
         ),
       },
@@ -94,7 +144,15 @@ export const router = createBrowserRouter([
         path: 'stats',
         element: (
           <RoleGuard role={[...ADMIN_ONLY]}>
-            <AdminStatsPage />
+            <Lazy><AdminStatsPage /></Lazy>
+          </RoleGuard>
+        ),
+      },
+      {
+        path: 'audit',
+        element: (
+          <RoleGuard role={[...ADMIN_ONLY]}>
+            <Lazy><AdminAuditPage /></Lazy>
           </RoleGuard>
         ),
       },
