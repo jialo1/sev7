@@ -12,7 +12,8 @@
     "dev:pro": "npm run dev -w @sev7/pro",
     "dev": "concurrently -n CLIENT,PRO -c blue,magenta \"npm:dev:client\" \"npm:dev:pro\"",
     "build": "npm run build --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "icons:gen": "./scripts/generate-png-icons.sh"
   },
   "devDependencies": {
     "concurrently": "^9.0.1"

@@ -92,6 +92,22 @@ Les `vercel.json` portent les headers de sécurité (CSP, HSTS, Permissions-Poli
 
 `.github/workflows/ci.yml` lance `npm ci` + lint + typecheck + build sur PR et push main. `dependabot.yml` ouvre des PRs hebdo (groupées par lib).
 
+## Icônes PNG (PWA install iOS / Android)
+
+Les favicons sont en SVG (`apps/{client,pro}/public/favicon.svg` + `apple-touch-icon.svg`). Pour générer les variantes PNG nécessaires à l'install homescreen iOS Safari :
+
+```
+npm run icons:gen
+```
+
+Le script détecte automatiquement l'outil disponible (rsvg-convert, ImageMagick, ou `npx @resvg/resvg-js-cli` en fallback portable). Génère :
+
+- `favicon-32.png`, `favicon-48.png` (onglets)
+- `apple-touch-icon.png` (iOS, 180×180)
+- `icon-192.png`, `icon-512.png` (Android / Chrome PWA install)
+
+Une fois générés, commit-les et ajoute les entrées dans `manifest.icons` du `vite.config.ts` (déjà documenté dans le script).
+
 ## Migrations
 
 Les migrations vivent dans `supabase/migrations/000X_*.sql`. Pour appliquer en prod :
