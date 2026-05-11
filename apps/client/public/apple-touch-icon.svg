@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a140d"/>
+      <stop offset="100%" stop-color="#0a0805"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f4a340"/>
+      <stop offset="100%" stop-color="#e88a2c"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="url(#bg)"/>
+  <text x="90" y="120" text-anchor="middle" font-family="'Outfit','Inter',system-ui,sans-serif" font-size="92" font-weight="800" fill="url(#amber)" letter-spacing="-3">S7</text>
+  <text x="90" y="148" text-anchor="middle" font-family="'Inter',system-ui,sans-serif" font-size="13" font-weight="700" fill="rgba(245,236,220,0.55)" letter-spacing="3">DAKAR</text>
+</svg>

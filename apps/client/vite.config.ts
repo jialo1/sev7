@@ -12,19 +12,20 @@ export default defineConfig({
       // En dev, on désactive le SW pour éviter les caches stale qui masquent
       // les changements HMR. Il reste actif en build prod.
       devOptions: { enabled: false },
-      includeAssets: ['favicon.svg', 'icons.svg'],
+      includeAssets: ['favicon.svg', 'icons.svg', 'apple-touch-icon.svg'],
       manifest: {
         name: 'SEV7 — Réservations',
         short_name: 'SEV7',
         description: 'Réserve ta soirée et ta table chez SEV7 Dakar.',
-        theme_color: '#1a1814',
-        background_color: '#0c0a12',
+        theme_color: '#0a0805',
+        background_color: '#0a0805',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
         lang: 'fr',
         icons: [
-          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+          { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: '/apple-touch-icon.svg', sizes: '180x180', type: 'image/svg+xml', purpose: 'maskable' },
         ],
       },
       workbox: {
