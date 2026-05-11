@@ -12,7 +12,14 @@ export default defineConfig({
       // En dev, on désactive le SW pour éviter les caches stale qui masquent
       // les changements HMR. Il reste actif en build prod.
       devOptions: { enabled: false },
-      includeAssets: ['favicon.svg', 'icons.svg', 'apple-touch-icon.svg'],
+      includeAssets: [
+        'favicon.svg',
+        'favicon-32.png',
+        'favicon-48.png',
+        'icons.svg',
+        'apple-touch-icon.png',
+        'apple-touch-icon.svg',
+      ],
       manifest: {
         name: 'SEV7 — Réservations',
         short_name: 'SEV7',
@@ -24,8 +31,10 @@ export default defineConfig({
         start_url: '/',
         lang: 'fr',
         icons: [
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
-          { src: '/apple-touch-icon.svg', sizes: '180x180', type: 'image/svg+xml', purpose: 'maskable' },
         ],
       },
       workbox: {
